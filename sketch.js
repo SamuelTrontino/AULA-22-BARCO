@@ -7,10 +7,15 @@ var ball
 var bolas = []
 var canvas, angle, tower, ground, cannon;
 var barco = []
+var barcomovimento = []
+var barcomovimentodados,barcomovimentoimage 
+
 
 function preload() {
   backgroundImg = loadImage("./assets/background.gif");
   towerImage = loadImage("./assets/tower.png");
+  barcomovimentodados = loadJSON("assets/boat/boat.json")
+  barcomovimentoimage = loadImage("assets/boat/boat.png")
 }
 
 function setup() {
@@ -32,7 +37,15 @@ function setup() {
   angle = 15
   cannon = new Cannon(180,110,130,100,angle)
 
+  var barcoframe = barcomovimentodados.frames
+  for(var i=0;i<barcoframe.length;i++){
+    var pos = barcoframe [i].position
+    var imagem = barcomovimentoimage.get(pos.x,pos.y,pos.l,pos.a)
+    barcomovimento.push(imagem)
+
+  }
 }
+
 
 function draw() {
   image(backgroundImg,0,0,1200,600)
@@ -47,7 +60,8 @@ function draw() {
   pop();
   
   for(var i=0;i<bolas.length;i++){
-      showball(bolas[i])
+      showball(bolas[i],i)
+      colisao(i)
   }
   barcoshow()
 }
@@ -65,7 +79,7 @@ function keyPressed(){
     bolas.push(ball)
   }
 }
-function showball(ball){
+function showball(ball,indice){
   if(ball){
     ball.show()
 }
@@ -77,20 +91,40 @@ function barcoshow(){
     ){
       var posicao = [-40,-20,-60,-80]
       var randomposition = random(posicao)
-      var barco1 = new Barco(width,height-70,170,170,randomposition)
-      barco.push(barco1)
+      var barco1 = new Barco(width,height-70,170,170,randomposition,barcomovimento)
+      barco.push(barco1)}
       for(var i=0;i<barco.length;i++){
         if(barco[i]){
           Matter.Body.setVelocity(barco[i].body,{
             x:-0.6,y:0
           })
           barco[i].show()
+          barco[i].animate()
+        }else{
+          barco[i]
+
         }
       }
-   } 
+    
   } else {
-    var barco1 = new Barco(width,height-70,170,170,-70)
+    var barco1 = new Barco(width,height-70,170,170,-70,barcomovimento)
     barco.push(barco1)
     
   }
+}
+function colisao(indice){
+  for(var i=0;i<barco.length;i++){
+    if(bolas[indice]!==undefined&&barco[i]!==undefined){
+      var bolabateu = Matter.SAT.collides(bolas[indice].body,barco[i].body)
+      
+      if(bolabateu.collided){
+        barco[i].remove(i)
+        Matter.World.remove(world,bolas[indice].body)
+        delete bolas[indice]
+
+      }
+
+    }
+  }
+
 }
